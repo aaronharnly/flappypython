@@ -165,10 +165,6 @@ def draw_obstacle(screen, resources, obstacle):
         # lower section of the pipe
         screen.blit(obstacle_img, (obstacle['x'], obstacle['door_y'] + obstacle['door_height']))
 
-        #pygame.draw.rect(screen, colors.OBSTACLE, [obstacle['x'], 0, obstacle['width'], SCREEN_HEIGHT])
-        #pygame.draw.rect(screen, colors.SKY, [obstacle['x'], obstacle['door_y'],
-        #    obstacle['width'], obstacle['door_height']])
-
 def draw_obstacles(screen, resources, obstacles):
     for obstacle in obstacles:
         draw_obstacle(screen, resources, obstacle)
