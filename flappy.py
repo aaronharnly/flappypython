@@ -17,6 +17,8 @@ GRAVITY = 8.0
 
 BIRD_START_VELOCITY_Y = 0
 BIRD_JUMP_VELOCITY_Y = -30
+BIRD_MAX_VELOCITY = 50
+BIRD_MAX_ANGLE = 45
 BIRD_START_X = 100
 BIRD_START_Y = SCREEN_HEIGHT / 2
 BIRD_HEIGHT = 50
@@ -161,7 +163,11 @@ def draw_background(screen, resources, game):
     screen.fill(colors.SKY)
 
 def draw_bird(screen, resources, bird):
-    screen.blit(resources['bird_img'], (bird['x'], bird['y']))
+    bird_img = resources['bird_img']
+    #angle = -1 * (float(bird['velocity_y']) / BIRD_MAX_VELOCITY) * BIRD_MAX_ANGLE
+    #rotated_img = pygame.transform.rotate(bird_img, angle)
+    #pygame.draw.rect(screen, colors.WHITE, [bird['x'], bird['y'], bird['width'], bird['height']])
+    screen.blit(bird_img, (bird['x'], bird['y']))
 
 def draw_obstacle(screen, resources, obstacle):
     if obstacle['x'] + obstacle['width'] > 0 and obstacle['x'] < SCREEN_WIDTH:
