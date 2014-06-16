@@ -13,10 +13,10 @@ def wrap_problems():
 def show_problem(problem, output):
     if output['feedback'] is True:
         show = "Great job."
-    elif output['feedback'] is not None:
-        show = output['feedback']
     elif output['error'] is not None:
         show = "Error: %s" % output['error']
+    elif output['feedback'] is not None:
+        show = output['feedback']
     elif output['result'] is None and output['locals'] is None:
         show = "(not started)"
     else:

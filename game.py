@@ -10,7 +10,7 @@ import random
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 500
 TICK_TIME_MS = 100
-CAPTION = "Computer Science Final Exam"
+CAPTION = "Flappy Python"
 
 GRAVITY = 8.0
 
@@ -44,7 +44,7 @@ SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
 def create_bird(resources):
     return {
-        'x': BIRD_START_X,
+        'x': resources['student']['bird_start_x'],
         'y': BIRD_START_Y,
         'velocity_y': BIRD_START_VELOCITY_Y,
         'width': resources['bird_img'].get_width(),
@@ -142,14 +142,14 @@ def update_game(game, resources):
     """
     Update the background, bird, and obstacles
     """
-    if not game['started']:
-        if game['current_key']:
-            game['started'] = True
-            game['current_key'] = None
-            game['clock'] = create_clock()
-            return game
-        else:
-            return game
+    should_start = resources['student']['should_start_game'](game['current_key'], game['started'])
+    if should_start:
+        game['started'] = True
+        game['current_key'] = None
+        game['clock'] = create_clock()
+        return game
+    elif not game['started']:
+        return game
 
     time = game['clock'].tick() / float(TICK_TIME_MS)
 
@@ -209,7 +209,7 @@ def draw_score(screen, resources, score):
     screen.blit(render, (SCORE_X, SCORE_Y))
 
 def draw_title(screen, resources):
-    author = resources.get('output', {}).get('problem_01', {}).get('result') or '???'
+    author = resources['student']['author']
     render_1 = resources['title_font'].render(TITLE, 1, colors.BLACK)
     render_2 = resources['title_font'].render("By %s" % author, 1, colors.BLACK)
     render_3 = resources['title_font'].render("[press space]", 1, (100, 100, 100))
@@ -263,21 +263,33 @@ def create_obstacle_cap_img():
     img = img.convert()
     return img
 
-def create_resources():
+def create_student(output):
+    return {
+        'author': output.get('problem_01', {}).get('result') or '???',
+        'should_start_game': output.get('problem_03', {}).get('locals', {}).get('should_start_game') or (lambda x, y: False),
+        'bird_start_x': output.get('problem_04', {}).get('locals', {}).get('bird_start_x') or BIRD_START_X,
+        'z': 1
+    }
+
+def create_resources(output):
     return {
         'screen': create_screen(),
         'score_font': create_score_font(),
         'title_font': create_title_font(),
         'bird_img': create_bird_img(),
         'obstacle_img': create_obstacle_img(),
-        'obstacle_cap_img': create_obstacle_cap_img()
+        'obstacle_cap_img': create_obstacle_cap_img(),
+        'output': output,
+        'student': create_student(output)
     }
 
 def run(output=None):
     """
     Runs the game.
     """
-    resources = create_resources()
+    if output is None:
+        output = {}
+    resources = create_resources(output)
     game = create_game(resources)
     while True:
         for event in pygame.event.get():
