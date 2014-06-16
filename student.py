@@ -46,8 +46,7 @@ def problem_03():
     is pressing the spacebar, and the game has NOT already started.
     """
     def should_start_game(player_pressing_spacebar, game_already_started):
-        return player_pressing_spacebar and not game_already_started
-
+        return
 
 def problem_04():
     """
