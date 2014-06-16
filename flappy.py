@@ -160,10 +160,14 @@ def draw_bird(screen, resources, bird):
 def draw_obstacle(screen, resources, obstacle):
     if obstacle['x'] + obstacle['width'] > 0 and obstacle['x'] < SCREEN_WIDTH:
         obstacle_img = resources['obstacle_img']
+        cap_img = resources['obstacle_cap_img']
         # upper section of the pipe
         screen.blit(obstacle_img, (obstacle['x'], 0), area=obstacle_img.get_rect(height=obstacle['door_y']))
+        screen.blit(cap_img, (obstacle['x'], obstacle['door_y'] - cap_img.get_height()))
         # lower section of the pipe
-        screen.blit(obstacle_img, (obstacle['x'], obstacle['door_y'] + obstacle['door_height']))
+        lower_y = obstacle['door_y'] + obstacle['door_height']
+        screen.blit(obstacle_img, (obstacle['x'], lower_y))
+        screen.blit(cap_img, (obstacle['x'], lower_y))
 
 def draw_obstacles(screen, resources, obstacles):
     for obstacle in obstacles:
