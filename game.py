@@ -3,7 +3,6 @@ This engine drives the game.
 """
 import pygame
 import sys
-import student
 import colors
 import random
 
@@ -11,9 +10,13 @@ import random
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 500
 TICK_TIME_MS = 100
-CAPTION = "Computer Science Final Exam: Flappy Bird"
+CAPTION = "Computer Science Final Exam"
 
 GRAVITY = 8.0
+
+TITLE_FONT = 'Helvetica,Arial'
+TITLE_FONT_SIZE = 50
+TITLE = 'Flappy Python'
 
 BIRD_START_VELOCITY_Y = 0
 BIRD_JUMP_VELOCITY_Y = -30
@@ -69,15 +72,22 @@ def create_obstacles(resources):
         create_obstacle(resources, OBSTACLE_START_X + OBSTACLE_GAP_X)
     ]
 
+def create_clock():
+    return pygame.time.Clock()
+
 def create_game(resources):
     return {
+        'started': False,
         'bird': create_bird(resources),
         'obstacles': create_obstacles(resources),
         'previous_key': None,
         'current_key': None,
         'score': 0,
-        'clock': pygame.time.Clock()
+        'clock': None
     }
+
+def start_game(game):
+    game['clock'] = create_clock()
 
 #
 # Each of these 'update' functions represents the changes that should happen
@@ -132,6 +142,15 @@ def update_game(game, resources):
     """
     Update the background, bird, and obstacles
     """
+    if not game['started']:
+        if game['current_key']:
+            game['started'] = True
+            game['current_key'] = None
+            game['clock'] = create_clock()
+            return game
+        else:
+            return game
+
     time = game['clock'].tick() / float(TICK_TIME_MS)
 
     # Bird
@@ -189,6 +208,15 @@ def draw_score(screen, resources, score):
     render = resources['score_font'].render(str(score), 1, colors.SCORE)
     screen.blit(render, (SCORE_X, SCORE_Y))
 
+def draw_title(screen, resources):
+    author = resources.get('output', {}).get('problem_01', {}).get('result') or '???'
+    render_1 = resources['title_font'].render(TITLE, 1, colors.BLACK)
+    render_2 = resources['title_font'].render("By %s" % author, 1, colors.BLACK)
+    render_3 = resources['title_font'].render("[press space]", 1, (100, 100, 100))
+    screen.blit(render_1, (20, 100))
+    screen.blit(render_2, (20, 100 + TITLE_FONT_SIZE))
+    screen.blit(render_3, (20, 100 + TITLE_FONT_SIZE*2))
+
 def draw_screen(screen, resources, game):
     """
     Draw the background, bird, and obstacles
@@ -197,6 +225,8 @@ def draw_screen(screen, resources, game):
     draw_obstacles(screen, resources, game['obstacles'])
     draw_bird(screen, resources, game['bird'])
     draw_score(screen, resources, game['score'])
+    if not game['started']:
+        draw_title(screen, resources)
     pygame.display.flip()
 
 def create_screen():
@@ -212,6 +242,9 @@ def create_screen():
 
 def create_score_font():
     return pygame.font.SysFont(SCORE_FONT, SCORE_FONT_SIZE)
+
+def create_title_font():
+    return pygame.font.SysFont(TITLE_FONT, TITLE_FONT_SIZE)
 
 def create_bird_img():
     img = pygame.image.load(BIRD_IMAGE_FILE)
@@ -234,12 +267,13 @@ def create_resources():
     return {
         'screen': create_screen(),
         'score_font': create_score_font(),
+        'title_font': create_title_font(),
         'bird_img': create_bird_img(),
         'obstacle_img': create_obstacle_img(),
         'obstacle_cap_img': create_obstacle_cap_img()
     }
 
-def run():
+def run(output=None):
     """
     Runs the game.
     """
