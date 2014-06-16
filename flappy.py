@@ -18,17 +18,16 @@ GRAVITY = 8.0
 BIRD_START_VELOCITY_Y = 0
 BIRD_JUMP_VELOCITY_Y = -30
 BIRD_START_X = 100
-BIRD_START_Y = 300
-BIRD_WIDTH = 40
-BIRD_HEIGHT = 40
+BIRD_START_Y = SCREEN_HEIGHT / 2
+BIRD_HEIGHT = 50
+BIRD_IMAGE_FILE = 'resources/bird.bmp'
 
 OBSTACLE_GAP_X = 0.8 * SCREEN_WIDTH
 OBSTACLE_START_X = 1.2 * SCREEN_WIDTH
 OBSTACLE_START_VELOCITY_X = -20
-OBSTACLE_WIDTH = BIRD_WIDTH
-DOOR_HEIGHT = BIRD_HEIGHT * 2.5
-DOOR_MINIMUM = BIRD_HEIGHT * 0.5
-DOOR_MAXIMUM = SCREEN_HEIGHT - (DOOR_HEIGHT * 1.5)
+DOOR_HEIGHT_IN_BIRDS = 2.5
+OBSTACLE_IMAGE_FILE = 'resources/pipe-vertical.bmp'
+OBSTACLE_CAP_IMAGE_FILE = 'resources/pipe-cap.bmp'
 
 SCORE_FONT = 'Helvetica,Arial'
 SCORE_FONT_SIZE = 40
@@ -38,33 +37,40 @@ SCORE_Y = 10
 # Derived settings
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 
-def create_bird():
+def create_bird(resources):
     return {
         'x': BIRD_START_X,
         'y': BIRD_START_Y,
-        'velocity_y': BIRD_START_VELOCITY_Y
+        'velocity_y': BIRD_START_VELOCITY_Y,
+        'width': resources['bird_img'].get_width(),
+        'height': resources['bird_img'].get_height()
     }
 
-def create_obstacle(x, velocity_x=OBSTACLE_START_VELOCITY_X):
+def create_obstacle(resources, x, velocity_x=OBSTACLE_START_VELOCITY_X):
+    door_height = resources['bird_img'].get_height() * DOOR_HEIGHT_IN_BIRDS
+    door_minimum = door_height * 0.5
+    door_maximum = SCREEN_HEIGHT - (door_height * 1.5)
     obstacle = {
         'x': x,
         'velocity_x': velocity_x,
-        'door_y': random.randint(DOOR_MINIMUM, DOOR_MAXIMUM),
+        'door_y': random.randint(int(door_minimum), int(door_maximum)),
+        'door_height': door_height,
         'passed': False,
-        'newly_passed': False
+        'newly_passed': False,
+        'width': resources['obstacle_img'].get_width()
     }
     return obstacle
 
-def create_obstacles():
+def create_obstacles(resources):
     return [
-        create_obstacle(OBSTACLE_START_X),
-        create_obstacle(OBSTACLE_START_X + OBSTACLE_GAP_X)
+        create_obstacle(resources, OBSTACLE_START_X),
+        create_obstacle(resources, OBSTACLE_START_X + OBSTACLE_GAP_X)
     ]
 
-def create_game():
+def create_game(resources):
     return {
-        'bird': create_bird(),
-        'obstacles': create_obstacles(),
+        'bird': create_bird(resources),
+        'obstacles': create_obstacles(resources),
         'previous_key': None,
         'current_key': None,
         'score': 0,
@@ -115,7 +121,7 @@ def update_obstacle_frame(bird, obstacle, time):
     obstacle['newly_passed'] = obstacle['passed'] and not old_passed
     return obstacle
 
-def update_game(game):
+def update_game(game, resources):
     """
     Update the background, bird, and obstacles
     """
@@ -132,13 +138,13 @@ def update_game(game):
     passed_new_obstacle = any(o['newly_passed'] for o in game['obstacles'])
     game['score'] = update_score(game['score'], passed_new_obstacle)
 
-    if game['obstacles'][0]['x'] + OBSTACLE_WIDTH < 0:
+    if game['obstacles'][0]['x'] + game['obstacles'][0]['width'] < 0:
         game['obstacles'].pop(0)
-        game['obstacles'].append(create_obstacle(game['obstacles'][0]['x'] + OBSTACLE_GAP_X))
+        game['obstacles'].append(create_obstacle(resources, game['obstacles'][0]['x'] + OBSTACLE_GAP_X))
 
     # Check for game over
     if game_is_over(game['bird'], False):
-        game = create_game()
+        game = create_game(resources)
 
     # Keys
     game['previous_key'] = game['current_key']
@@ -149,13 +155,13 @@ def draw_background(screen, resources, game):
     screen.fill(colors.SKY)
 
 def draw_bird(screen, resources, bird):
-    pygame.draw.rect(screen, colors.BIRD, [bird['x'], bird['y'], BIRD_WIDTH, BIRD_HEIGHT])
+    screen.blit(resources['bird_img'], (bird['x'], bird['y']))
 
 def draw_obstacle(screen, resources, obstacle):
-    if obstacle['x'] + OBSTACLE_WIDTH > 0 and obstacle['x'] < SCREEN_WIDTH:
-        pygame.draw.rect(screen, colors.OBSTACLE, [obstacle['x'], 0, OBSTACLE_WIDTH, SCREEN_HEIGHT])
+    if obstacle['x'] + obstacle['width'] > 0 and obstacle['x'] < SCREEN_WIDTH:
+        pygame.draw.rect(screen, colors.OBSTACLE, [obstacle['x'], 0, obstacle['width'], SCREEN_HEIGHT])
         pygame.draw.rect(screen, colors.SKY, [obstacle['x'], obstacle['door_y'],
-            OBSTACLE_WIDTH, DOOR_HEIGHT])
+            obstacle['width'], obstacle['door_height']])
 
 def draw_obstacles(screen, resources, obstacles):
     for obstacle in obstacles:
@@ -189,10 +195,30 @@ def create_screen():
 def create_score_font():
     return pygame.font.SysFont(SCORE_FONT, SCORE_FONT_SIZE)
 
+def create_bird_img():
+    img = pygame.image.load(BIRD_IMAGE_FILE)
+    img = img.convert()
+    colorkey = img.get_at((0, 0))
+    img.set_colorkey(colorkey, pygame.RLEACCEL)
+    return img
+
+def create_obstacle_img():
+    img = pygame.image.load(OBSTACLE_IMAGE_FILE)
+    img = img.convert()
+    return img
+
+def create_obstacle_cap_img():
+    img = pygame.image.load(OBSTACLE_CAP_IMAGE_FILE)
+    img = img.convert()
+    return img
+
 def create_resources():
     return {
         'screen': create_screen(),
-        'score_font': create_score_font()
+        'score_font': create_score_font(),
+        'bird_img': create_bird_img(),
+        'obstacle_img': create_obstacle_img(),
+        'obstacle_cap_img': create_obstacle_cap_img()
     }
 
 def run():
@@ -200,7 +226,7 @@ def run():
     Runs the game.
     """
     resources = create_resources()
-    game = create_game()
+    game = create_game(resources)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -208,7 +234,7 @@ def run():
             if event.type == pygame.KEYDOWN:
                 game['current_key'] = event.key
 
-        game = update_game(game)
+        game = update_game(game, resources)
         draw_screen(resources['screen'], resources, game)
 
 def quit():
