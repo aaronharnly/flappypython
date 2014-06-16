@@ -159,9 +159,15 @@ def draw_bird(screen, resources, bird):
 
 def draw_obstacle(screen, resources, obstacle):
     if obstacle['x'] + obstacle['width'] > 0 and obstacle['x'] < SCREEN_WIDTH:
-        pygame.draw.rect(screen, colors.OBSTACLE, [obstacle['x'], 0, obstacle['width'], SCREEN_HEIGHT])
-        pygame.draw.rect(screen, colors.SKY, [obstacle['x'], obstacle['door_y'],
-            obstacle['width'], obstacle['door_height']])
+        obstacle_img = resources['obstacle_img']
+        # upper section of the pipe
+        screen.blit(obstacle_img, (obstacle['x'], 0), area=obstacle_img.get_rect(height=obstacle['door_y']))
+        # lower section of the pipe
+        screen.blit(obstacle_img, (obstacle['x'], obstacle['door_y'] + obstacle['door_height']))
+
+        #pygame.draw.rect(screen, colors.OBSTACLE, [obstacle['x'], 0, obstacle['width'], SCREEN_HEIGHT])
+        #pygame.draw.rect(screen, colors.SKY, [obstacle['x'], obstacle['door_y'],
+        #    obstacle['width'], obstacle['door_height']])
 
 def draw_obstacles(screen, resources, obstacles):
     for obstacle in obstacles:
