@@ -99,6 +99,11 @@ def update_bird_frame(bird, key_pressed, time):
     bird['y'] = update_bird_y(bird['y'], bird['velocity_y'], time)
     return bird
 
+def bird_collided(bird, obstacle):
+    x_overlap = bird['x'] + bird['width'] >= obstacle['x'] and bird['x'] <= obstacle['x'] + obstacle['width']
+    y_in_door = bird['y'] > obstacle['door_y'] and bird['y'] + bird['height'] < obstacle['door_y'] + obstacle['door_height']
+    return x_overlap and not y_in_door
+
 def game_is_over(bird, collided):
     return bird['y'] < 0 or bird['y'] > SCREEN_HEIGHT or collided
 
@@ -143,7 +148,8 @@ def update_game(game, resources):
         game['obstacles'].append(create_obstacle(resources, game['obstacles'][0]['x'] + OBSTACLE_GAP_X))
 
     # Check for game over
-    if game_is_over(game['bird'], False):
+    collided = any([bird_collided(game['bird'], obstacle) for obstacle in game['obstacles']])
+    if game_is_over(game['bird'], collided):
         game = create_game(resources)
 
     # Keys
